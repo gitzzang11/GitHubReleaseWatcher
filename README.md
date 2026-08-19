@@ -11,6 +11,9 @@ Windows에서 GitHub 저장소의 새 Release를 주기적으로 확인하고 �
 
 설정에서는 자동 확인 간격, Pre-release 포함, Windows 시작 시 실행, GitHub Personal Access Token을 구성할 수 있습니다. Token은 JSON이 아닌 Windows 자격 증명 관리자에 저장됩니다.
 
+앱은 실행 직후 한 번 Release를 확인합니다. Windows가 잠겨 있으면 새 Release 알림을 앱 안에 보류하고,
+사용자가 잠금을 해제해 바탕화면으로 돌아온 뒤에 표시합니다.
+
 ## 개발 명령
 
 ```powershell

@@ -11,6 +11,7 @@ public partial class App : System.Windows.Application
 {
     private FileLogger? _logger;
     private ThemeService? _themeService;
+    private DesktopSessionService? _desktopSessionService;
     private NotificationService? _notificationService;
     private TrayService? _trayService;
     private ReleaseMonitorService? _monitorService;
@@ -30,7 +31,8 @@ public partial class App : System.Windows.Application
         await _logger.InfoAsync("앱 시작");
 
         _themeService = new ThemeService();
-        _notificationService = new NotificationService(_logger);
+        _desktopSessionService = new DesktopSessionService(Dispatcher, _logger);
+        _notificationService = new NotificationService(_logger, _desktopSessionService);
         _notificationService.Register();
         _notificationService.ReleaseRequested += url => Dispatcher.Invoke(() => BrowserService.Open(url));
         _httpClient = new HttpClient();
@@ -57,14 +59,13 @@ public partial class App : System.Windows.Application
         StartMonitor();
         _mainViewModel.CheckIntervalChanged += StartMonitor;
 
-        if (e.Args.Contains("--background", StringComparer.OrdinalIgnoreCase))
-        {
-            _trayService.ShowBalloon("백그라운드에서 Release를 확인합니다.");
-        }
-        else
+        if (!e.Args.Contains("--background", StringComparer.OrdinalIgnoreCase))
         {
             _mainWindow.Show();
         }
+
+        // 주기 타이머를 기다리지 않고 앱이 시작된 직후 한 번 확인한다.
+        await _mainViewModel.CheckAllAsync(true);
     }
 
     private void StartMonitor()
@@ -86,6 +87,7 @@ public partial class App : System.Windows.Application
         _monitorService?.Dispose();
         _trayService?.Dispose();
         _notificationService?.Dispose();
+        _desktopSessionService?.Dispose();
         _themeService?.Dispose();
         _httpClient?.Dispose();
         if (_logger is not null) await _logger.InfoAsync("앱 종료");
