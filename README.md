@@ -112,6 +112,19 @@ Inno Setup 6가 설치된 Windows 환경에서 실행합니다.
 
 결과 파일은 `artifacts\installer`에 생성됩니다. 설치 프로그램은 고정 AppId로 기존 설치를 감지하고 업데이트·복구 설치·다운그레이드 차단을 처리합니다.
 
+### 자동 Release 배포
+
+프로젝트 버전을 변경하고 같은 버전의 태그를 푸시하면 GitHub Actions가 테스트, 설치 프로그램 빌드, SHA-256 체크섬 생성, Release 게시를 자동으로 수행합니다.
+
+```powershell
+# 예: <Version>1.0.2</Version>으로 변경하고 커밋한 뒤
+git tag v1.0.2
+git push origin main
+git push origin v1.0.2
+```
+
+태그와 `GitHubReleaseWatcher.csproj`의 `<Version>` 값이 다르거나 같은 태그의 Release가 이미 존재하면 자동 배포가 중단됩니다.
+
 ## 프로젝트 구조
 
 ```text
