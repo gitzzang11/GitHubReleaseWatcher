@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/GitHubReleaseWatcher.Core/GitHubReleaseWatcher.Core.csproj" />
+    <Project Path="src/GitHubReleaseWatcher/GitHubReleaseWatcher.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/GitHubReleaseWatcher.Tests/GitHubReleaseWatcher.Tests.csproj" />
+  </Folder>
+</Solution>
