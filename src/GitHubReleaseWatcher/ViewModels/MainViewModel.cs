@@ -15,6 +15,7 @@ public sealed class MainViewModel : ObservableObject
     private readonly StartupService _startupService;
     private readonly NotificationService _notificationService;
     private readonly FileLogger _logger;
+    private readonly ThemeService? _themeService;
     private AppSettings _settings = new();
     private string _repositoryUrl = string.Empty;
     private string? _inputError;
@@ -30,7 +31,8 @@ public sealed class MainViewModel : ObservableObject
         CredentialTokenStore tokenStore,
         StartupService startupService,
         NotificationService notificationService,
-        FileLogger logger)
+        FileLogger logger,
+        ThemeService? themeService = null)
     {
         _gitHubService = gitHubService;
         _storage = storage;
@@ -38,6 +40,7 @@ public sealed class MainViewModel : ObservableObject
         _startupService = startupService;
         _notificationService = notificationService;
         _logger = logger;
+        _themeService = themeService;
         _notificationService.NotificationDelivered += OnNotificationDelivered;
 
         AddRepositoryCommand = new AsyncRelayCommand(AddRepositoryAsync, () => !IsChecking && !string.IsNullOrWhiteSpace(RepositoryUrl));
@@ -52,6 +55,7 @@ public sealed class MainViewModel : ObservableObject
 
     public ObservableCollection<RepositoryItemViewModel> Repositories { get; } = [];
     public IReadOnlyList<int> CheckIntervals { get; } = AppSettings.AllowedIntervals;
+    public IReadOnlyList<AppThemeMode> ThemeModes { get; } = [AppThemeMode.System, AppThemeMode.Light, AppThemeMode.Dark];
 
     public string RepositoryUrl
     {
@@ -98,6 +102,17 @@ public sealed class MainViewModel : ObservableObject
     public bool RunAtStartup { get => _settings.RunAtStartup; set { if (_settings.RunAtStartup == value) return; _settings.RunAtStartup = value; OnPropertyChanged(); } }
     public bool MinimizeToTrayOnClose { get => _settings.MinimizeToTrayOnClose; set { if (_settings.MinimizeToTrayOnClose == value) return; _settings.MinimizeToTrayOnClose = value; OnPropertyChanged(); } }
     public int CheckIntervalMinutes { get => _settings.CheckIntervalMinutes; set { if (_settings.CheckIntervalMinutes == value) return; _settings.CheckIntervalMinutes = value; OnPropertyChanged(); } }
+    public AppThemeMode ThemeMode
+    {
+        get => _settings.ThemeMode;
+        set
+        {
+            if (_settings.ThemeMode == value) return;
+            _settings.ThemeMode = value;
+            _themeService?.Apply(value);
+            OnPropertyChanged();
+        }
+    }
     public bool IncludePrereleases
     {
         get => _settings.IncludePrereleases;
@@ -127,6 +142,7 @@ public sealed class MainViewModel : ObservableObject
     {
         var loaded = await _storage.LoadAsync();
         _settings = loaded.Settings;
+        _themeService?.Apply(_settings.ThemeMode);
         foreach (var repository in loaded.Repositories)
         {
             Repositories.Add(new RepositoryItemViewModel(repository));
@@ -334,6 +350,7 @@ public sealed class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(RunAtStartup));
         OnPropertyChanged(nameof(MinimizeToTrayOnClose));
         OnPropertyChanged(nameof(CheckIntervalMinutes));
+        OnPropertyChanged(nameof(ThemeMode));
         OnPropertyChanged(nameof(IncludePrereleases));
     }
 

@@ -69,7 +69,8 @@ public partial class App : System.Windows.Application
             new CredentialTokenStore(),
             new StartupService(),
             _notificationService,
-            _logger);
+            _logger,
+            _themeService);
         await _mainViewModel.InitializeAsync();
 
         _mainWindow = new MainWindow(_mainViewModel);

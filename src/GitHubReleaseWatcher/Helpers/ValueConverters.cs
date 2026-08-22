@@ -27,13 +27,49 @@ public sealed class StatusBrushConverter : IValueConverter
     {
         var key = value switch
         {
-            RepositoryStatus.UpdateAvailable => "WarningBrush",
-            RepositoryStatus.Failed => "DangerBrush",
-            RepositoryStatus.Checking => "AccentBrush",
-            RepositoryStatus.NoReleases => "MutedTextBrush",
-            _ => "SuccessBrush"
+            RepositoryStatus.UpdateAvailable => "StatusUpdateFgBrush",
+            RepositoryStatus.Failed => "StatusFailedFgBrush",
+            RepositoryStatus.Checking => "StatusCheckingFgBrush",
+            RepositoryStatus.NoReleases => "StatusNoReleasesFgBrush",
+            _ => "StatusLatestFgBrush"
         };
-        return System.Windows.Application.Current.Resources[key];
+        return System.Windows.Application.Current.Resources[key] ?? System.Windows.Application.Current.Resources["PrimaryTextBrush"];
+    }
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+        System.Windows.Data.Binding.DoNothing;
+}
+
+public sealed class StatusBackgroundBrushConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        var key = value switch
+        {
+            RepositoryStatus.UpdateAvailable => "StatusUpdateBgBrush",
+            RepositoryStatus.Failed => "StatusFailedBgBrush",
+            RepositoryStatus.Checking => "StatusCheckingBgBrush",
+            RepositoryStatus.NoReleases => "StatusNoReleasesBgBrush",
+            _ => "StatusLatestBgBrush"
+        };
+        return System.Windows.Application.Current.Resources[key] ?? System.Windows.Application.Current.Resources["SurfaceBrush"];
+    }
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+        System.Windows.Data.Binding.DoNothing;
+}
+
+public sealed class StatusBorderBrushConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        var key = value switch
+        {
+            RepositoryStatus.UpdateAvailable => "StatusUpdateBorderBrush",
+            RepositoryStatus.Failed => "StatusFailedBorderBrush",
+            RepositoryStatus.Checking => "StatusCheckingBorderBrush",
+            RepositoryStatus.NoReleases => "StatusNoReleasesBorderBrush",
+            _ => "StatusLatestBorderBrush"
+        };
+        return System.Windows.Application.Current.Resources[key] ?? System.Windows.Application.Current.Resources["BorderBrush"];
     }
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
         System.Windows.Data.Binding.DoNothing;
@@ -47,6 +83,20 @@ public sealed class IntervalLabelConverter : IValueConverter
         180 => "3시간",
         360 => "6시간",
         int minutes => $"{minutes}분",
+        _ => value?.ToString() ?? string.Empty
+    };
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+        System.Windows.Data.Binding.DoNothing;
+}
+
+public sealed class ThemeLabelConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => value switch
+    {
+        AppThemeMode.System => "시스템 기본",
+        AppThemeMode.Light => "라이트 모드",
+        AppThemeMode.Dark => "다크 모드",
         _ => value?.ToString() ?? string.Empty
     };
 

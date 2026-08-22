@@ -6,146 +6,559 @@
         mc:Ignorable="d" Title="GitHub Release Watcher"
         Icon="Assets/AppIcon.ico"
         Width="820" Height="720" MinWidth="620" MinHeight="540"
-        WindowStartupLocation="CenterScreen" Closing="OnClosing">
-    <Grid Background="{DynamicResource CanvasBrush}">
-        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+        WindowStyle="None"
+        WindowStartupLocation="CenterScreen"
+        Closing="OnClosing"
+        StateChanged="OnWindowStateChanged">
 
-        <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1" Padding="26,18">
-            <Grid>
-                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Image Width="36" Height="36" Source="Assets/AppIcon.png" Stretch="Uniform" Margin="0,0,12,0" />
-                    <StackPanel>
-                        <TextBlock Text="GitHub Release Watcher" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="20" FontWeight="SemiBold" />
-                        <TextBlock Text="새 Release를 놓치지 않도록 조용히 확인합니다" FontSize="12" Foreground="{DynamicResource MutedTextBrush}" Margin="0,2,0,0" />
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="38"
+                      ResizeBorderThickness="6"
+                      CornerRadius="0"
+                      GlassFrameThickness="0"
+                      UseAeroCaptionButtons="False" />
+    </WindowChrome.WindowChrome>
+
+    <Border x:Name="WindowBorder"
+            Background="{DynamicResource CanvasBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="1">
+        <Grid x:Name="RootContainer">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="38" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Custom TitleBar -->
+            <Border Grid.Row="0"
+                    Background="{DynamicResource TitleBarBrush}"
+                    BorderBrush="{DynamicResource DividerBrush}"
+                    BorderThickness="0,0,0,1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- App Brand & Title -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0,0,0" IsHitTestVisible="False">
+                        <Image Width="18" Height="18" Source="Assets/AppIcon.png" Stretch="Uniform" Margin="0,0,8,0" RenderOptions.BitmapScalingMode="HighQuality" />
+                        <TextBlock Text="GitHub Release Watcher"
+                                   FontSize="12.5"
+                                   FontWeight="SemiBold"
+                                   VerticalAlignment="Center" />
                     </StackPanel>
-                </StackPanel>
-                <Button Grid.Column="1" Style="{StaticResource IconButton}" Content="&#xE713;" Command="{Binding ToggleSettingsCommand}" ToolTip="설정" AutomationProperties.Name="설정 열기" />
-            </Grid>
-        </Border>
 
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-            <Grid MaxWidth="860" Margin="26,24,26,26">
-                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Text="GitHub 저장소 URL" FontWeight="SemiBold" Margin="0,0,0,8" />
-                <Grid Grid.Row="1">
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                    <TextBox x:Name="RepositoryUrlBox" Grid.Column="0" Text="{Binding RepositoryUrl, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,10,0"
-                             ToolTip="예: https://github.com/Flow-Launcher/Flow.Launcher" AutomationProperties.Name="GitHub 저장소 URL"
-                             PreviewKeyDown="OnRepositoryUrlKeyDown" />
-                    <Button Grid.Column="1" Content="추가" MinWidth="78" Style="{StaticResource AccentButton}" Command="{Binding AddRepositoryCommand}" IsDefault="True" />
+                    <!-- Center Empty Drag Area -->
+                    <Grid Grid.Column="1" Background="Transparent" />
+
+                    <!-- Right Controls (Settings & Caption Buttons) -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Stretch">
+                        <Button Style="{StaticResource IconButton}"
+                                Content="&#xE713;"
+                                Command="{Binding ToggleSettingsCommand}"
+                                ToolTip="설정"
+                                Width="34" Height="30"
+                                Margin="0,0,6,0"
+                                VerticalAlignment="Center"
+                                WindowChrome.IsHitTestVisibleInChrome="True"
+                                AutomationProperties.Name="설정 열기" />
+
+                        <!-- Window Caption Controls -->
+                        <Button x:Name="MinimizeButton"
+                                Style="{StaticResource CaptionButtonStyle}"
+                                Content="&#xE921;"
+                                Click="OnMinimizeClick"
+                                ToolTip="최소화"
+                                AutomationProperties.Name="최소화" />
+                        <Button x:Name="MaximizeButton"
+                                Style="{StaticResource CaptionButtonStyle}"
+                                Content="&#xE922;"
+                                Click="OnMaximizeRestoreClick"
+                                ToolTip="최대화"
+                                AutomationProperties.Name="최대화" />
+                        <Button x:Name="CloseButton"
+                                Style="{StaticResource CaptionCloseButtonStyle}"
+                                Content="&#xE8BB;"
+                                Click="OnCloseClick"
+                                ToolTip="닫기"
+                                AutomationProperties.Name="닫기" />
+                    </StackPanel>
                 </Grid>
-                <StackPanel Grid.Row="2">
-                    <TextBlock Text="{Binding InputError}" Foreground="{DynamicResource DangerBrush}" FontSize="12" Margin="2,6,0,0" />
-                    <Border Background="{DynamicResource AccentSoftBrush}" CornerRadius="4" Padding="12,9" Margin="0,12,0,0" Visibility="{Binding HasBanner, Converter={StaticResource BoolToVisibility}}">
-                        <TextBlock Text="{Binding BannerMessage}" Foreground="{DynamicResource PrimaryTextBrush}" />
-                    </Border>
-                </StackPanel>
+            </Border>
 
-                <StackPanel Grid.Row="3" Margin="0,26,0,0">
-                    <Grid Margin="0,0,0,10">
-                        <TextBlock Text="{Binding UpdateSummary}" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="17" FontWeight="SemiBold" />
-                        <TextBlock Text="{Binding Repositories.Count, StringFormat={}{0}개 저장소}" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="{DynamicResource MutedTextBrush}" FontSize="12" />
-                    </Grid>
+            <!-- Main Content Area with Modern Custom ScrollBar -->
+            <ScrollViewer Grid.Row="1"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          Focusable="False">
+                <Grid MaxWidth="820" Margin="24,20,24,24">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
-                    <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="28" Margin="0,0,0,10">
-                        <Border.Style><Style TargetType="Border"><Setter Property="Visibility" Value="Collapsed" /><Style.Triggers><DataTrigger Binding="{Binding Repositories.Count}" Value="0"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style></Border.Style>
-                        <StackPanel HorizontalAlignment="Center" MaxWidth="420">
-                            <TextBlock Text="&#xE8F1;" FontFamily="Segoe Fluent Icons" FontSize="28" Foreground="{DynamicResource MutedTextBrush}" HorizontalAlignment="Center" />
-                            <TextBlock Text="감시 중인 저장소가 없습니다" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,12,0,4" />
-                            <TextBlock Text="위에 GitHub 저장소 URL을 붙여넣으면 현재 Release를 기준으로 감시를 시작합니다." TextWrapping="Wrap" TextAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}" />
+                    <!-- Add Repository Section -->
+                    <Border Grid.Row="0"
+                            Background="{DynamicResource SurfaceBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="18,16">
+                        <StackPanel>
+                            <TextBlock Text="GitHub 저장소 추가"
+                                       FontSize="13.5"
+                                       FontWeight="SemiBold"
+                                       Margin="0,0,0,10" />
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="RepositoryUrlBox"
+                                         Grid.Column="0"
+                                         Text="{Binding RepositoryUrl, UpdateSourceTrigger=PropertyChanged}"
+                                         Margin="0,0,8,0"
+                                         ToolTip="예: https://github.com/Flow-Launcher/Flow.Launcher"
+                                         AutomationProperties.Name="GitHub 저장소 URL"
+                                         PreviewKeyDown="OnRepositoryUrlKeyDown" />
+                                <Button Grid.Column="1"
+                                        Content="추가"
+                                        MinWidth="72"
+                                        Style="{StaticResource AccentButton}"
+                                        Command="{Binding AddRepositoryCommand}"
+                                        IsDefault="True" />
+                            </Grid>
+
+                            <!-- Error Message -->
+                            <TextBlock Text="{Binding InputError}"
+                                       Foreground="{DynamicResource DangerBrush}"
+                                       FontSize="12"
+                                       Margin="2,6,0,0"
+                                       Visibility="{Binding InputError, Converter={StaticResource BoolToVisibility}}" />
+
+                            <!-- Banner Message -->
+                            <Border Background="{DynamicResource AccentSoftBrush}"
+                                    BorderBrush="{DynamicResource AccentBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="12,8"
+                                    Margin="0,10,0,0"
+                                    Visibility="{Binding HasBanner, Converter={StaticResource BoolToVisibility}}">
+                                <TextBlock Text="{Binding BannerMessage}"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"
+                                           FontSize="12.5" />
+                            </Border>
                         </StackPanel>
                     </Border>
 
-                    <ItemsControl ItemsSource="{Binding Repositories}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,0,10" Padding="18,16">
-                                    <Grid>
-                                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                        <StackPanel Grid.Row="0" Grid.Column="0" MinWidth="0">
-                                            <TextBlock Text="{Binding Name}" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding FullName}" />
-                                            <TextBlock Text="{Binding FullName}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" TextTrimming="CharacterEllipsis" Margin="0,3,0,0" />
-                                        </StackPanel>
-                                        <Border Grid.Row="0" Grid.Column="1" Background="{DynamicResource RaisedBrush}" BorderBrush="{Binding Status, Converter={StaticResource StatusBrush}}" BorderThickness="1" CornerRadius="4" Padding="9,5" Margin="14,0,0,0" VerticalAlignment="Top">
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding StatusGlyph}" Foreground="{Binding Status, Converter={StaticResource StatusBrush}}" FontWeight="Bold" Margin="0,0,6,0" />
-                                                <TextBlock Text="{Binding StatusText}" Foreground="{Binding Status, Converter={StaticResource StatusBrush}}" FontSize="12" FontWeight="SemiBold" />
-                                            </StackPanel>
-                                        </Border>
-                                        <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding VersionText}" FontFamily="Cascadia Mono, Consolas" FontSize="13" Margin="0,16,0,0" TextTrimming="CharacterEllipsis" />
-                                        <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,14,0,0">
-                                            <TextBlock Text="{Binding LastCheckedText, StringFormat=마지막 확인: {0}}" Foreground="{DynamicResource MutedTextBrush}" FontSize="12" VerticalAlignment="Center" />
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                                <Button Style="{StaticResource IconButton}" Content="&#xE72C;" Command="{Binding DataContext.RefreshRepositoryCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" ToolTip="이 저장소 새로 고침" AutomationProperties.Name="저장소 새로 고침" />
-                                                <Button Style="{StaticResource IconButton}" Content="&#xE74D;" Command="{Binding DataContext.DeleteRepositoryCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" ToolTip="저장소 삭제" AutomationProperties.Name="저장소 삭제" />
-                                                <Button Content="Release 보기" MinHeight="32" Padding="12,4" Margin="6,0,0,0" Command="{Binding DataContext.OpenReleaseCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" />
-                                            </StackPanel>
-                                        </Grid>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </StackPanel>
-            </Grid>
-        </ScrollViewer>
+                    <!-- Repository List Section -->
+                    <StackPanel Grid.Row="1" Margin="0,22,0,0">
+                        <!-- Section Header Summary -->
+                        <Grid Margin="2,0,2,10">
+                            <TextBlock Text="{Binding UpdateSummary}"
+                                       FontSize="15"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding Repositories.Count, StringFormat={}{0}개 저장소}"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Center"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       FontSize="12" />
+                        </Grid>
 
-        <Border Grid.Row="2" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0" Padding="26,13">
-            <Grid><TextBlock Text="{Binding LastFullCheckText}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" VerticalAlignment="Center" />
-                <Button HorizontalAlignment="Right" Content="{Binding CheckButtonText}" Command="{Binding CheckAllCommand}" MinWidth="96" />
-            </Grid>
-        </Border>
-
-        <Border Grid.Row="0" Grid.RowSpan="3" Background="#66000000" Visibility="{Binding IsSettingsOpen, Converter={StaticResource BoolToVisibility}}" MouseLeftButtonDown="OnOverlayClick" />
-        <Border Grid.Row="0" Grid.RowSpan="3" Width="390" HorizontalAlignment="Right" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,0" Padding="26"
-                Visibility="{Binding IsSettingsOpen, Converter={StaticResource BoolToVisibility}}">
-            <Grid>
-                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                <Grid Grid.Row="0"><TextBlock Text="설정" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="22" FontWeight="SemiBold" />
-                    <Button HorizontalAlignment="Right" Style="{StaticResource IconButton}" Content="&#xE711;" Command="{Binding ToggleSettingsCommand}" ToolTip="닫기" />
-                </Grid>
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,24,0,16">
-                    <StackPanel>
-                        <TextBlock Text="일반" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,10" />
-                        <CheckBox Content="Windows 시작 시 자동 실행" IsChecked="{Binding RunAtStartup}" />
-                        <CheckBox Content="창을 닫을 때 트레이로 최소화" IsChecked="{Binding MinimizeToTrayOnClose}" Margin="0,4,0,0" />
-                        <TextBlock Text="업데이트 확인 간격" Margin="0,18,0,7" />
-                        <ListBox ItemsSource="{Binding CheckIntervals}" SelectedItem="{Binding CheckIntervalMinutes}" Background="Transparent" BorderThickness="0" Padding="0">
-                            <ListBox.ItemsPanel><ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate></ListBox.ItemsPanel>
-                            <ListBox.ItemContainerStyle>
-                                <Style TargetType="ListBoxItem">
-                                    <Setter Property="Margin" Value="0,0,6,6" /><Setter Property="Padding" Value="0" /><Setter Property="FocusVisualStyle" Value="{x:Null}" />
-                                    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem">
-                                        <Border x:Name="Choice" Background="{DynamicResource ControlBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="4" Padding="11,7">
-                                            <ContentPresenter HorizontalAlignment="Center" />
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Choice" Property="Background" Value="{DynamicResource ControlHoverBrush}" /></Trigger>
-                                            <Trigger Property="IsSelected" Value="True"><Setter TargetName="Choice" Property="Background" Value="{DynamicResource AccentBrush}" /><Setter Property="Foreground" Value="White" /><Setter TargetName="Choice" Property="BorderBrush" Value="{DynamicResource AccentBrush}" /></Trigger>
-                                            <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Choice" Property="BorderThickness" Value="2" /></Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate></Setter.Value></Setter>
+                        <!-- Empty State Box -->
+                        <Border Background="{DynamicResource SurfaceBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="32,28"
+                                Margin="0,0,0,10">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Repositories.Count}" Value="0">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
                                 </Style>
-                            </ListBox.ItemContainerStyle>
-                            <ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Converter={StaticResource IntervalLabel}}" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" FontSize="12" /></DataTemplate></ListBox.ItemTemplate>
-                        </ListBox>
-                        <TextBlock Text="알림" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Margin="0,18,0,10" />
-                        <Button Content="테스트 알림 보내기" Command="{Binding TestNotificationCommand}" HorizontalAlignment="Left" />
-                        <TextBlock Text="알림이 보이지 않으면 Windows 설정의 시스템 > 알림에서 허용 상태를 확인해 주세요." FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" Margin="0,8,0,0" />
-                        <Separator Margin="0,24" Background="{DynamicResource DividerBrush}" />
-                        <TextBlock Text="GitHub" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,10" />
-                        <CheckBox Content="Pre-release 포함" IsChecked="{Binding IncludePrereleases}" />
-                        <TextBlock Text="Personal Access Token (선택)" Margin="0,18,0,7" />
-                        <PasswordBox x:Name="TokenBox" MinHeight="38" Padding="10,7" Background="{DynamicResource InputBrush}" Foreground="{DynamicResource PrimaryTextBrush}" BorderBrush="{DynamicResource BorderBrush}" PasswordChanged="OnTokenChanged" ToolTip="Windows 자격 증명 관리자에 안전하게 저장됩니다" />
-                        <TextBlock Text="공개 저장소는 Token 없이 사용할 수 있습니다. Token은 Windows 자격 증명 관리자에 저장됩니다." FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" Margin="0,8,0,0" />
+                            </Border.Style>
+                            <StackPanel HorizontalAlignment="Center" MaxWidth="400">
+                                <TextBlock Text="&#xE8F1;"
+                                           FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                           FontSize="26"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           HorizontalAlignment="Center" />
+                                <TextBlock Text="감시 중인 저장소가 없습니다"
+                                           FontSize="14.5"
+                                           FontWeight="SemiBold"
+                                           HorizontalAlignment="Center"
+                                           Margin="0,10,0,4" />
+                                <TextBlock Text="상단에 GitHub 저장소 URL을 입력하면 새로운 릴리즈가 등록될 때 알림을 받을 수 있습니다."
+                                           TextWrapping="Wrap"
+                                           TextAlignment="Center"
+                                           FontSize="12.5"
+                                           Foreground="{DynamicResource SecondaryTextBrush}" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Subscribed Repositories Cards -->
+                        <ItemsControl ItemsSource="{Binding Repositories}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource SurfaceBrush}"
+                                            BorderBrush="{DynamicResource BorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Margin="0,0,0,8"
+                                            Padding="16,14">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- Repository Name & Path -->
+                                            <StackPanel Grid.Row="0" Grid.Column="0" MinWidth="0" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}"
+                                                           FontSize="14.5"
+                                                           FontWeight="SemiBold"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           ToolTip="{Binding FullName}" />
+                                                <TextBlock Text="{Binding FullName}"
+                                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                                           FontSize="11.5"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           Margin="0,2,0,0" />
+                                            </StackPanel>
+
+                                            <!-- Status Tag Badge -->
+                                            <Border Grid.Row="0" Grid.Column="1"
+                                                    Background="{Binding Status, Converter={StaticResource StatusBackgroundBrush}}"
+                                                    BorderBrush="{Binding Status, Converter={StaticResource StatusBorderBrush}}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="4"
+                                                    Padding="8,3"
+                                                    Margin="12,0,0,0"
+                                                    VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding StatusGlyph}"
+                                                               Foreground="{Binding Status, Converter={StaticResource StatusBrush}}"
+                                                               FontWeight="Bold"
+                                                               FontSize="11"
+                                                               Margin="0,0,5,0"
+                                                               VerticalAlignment="Center" />
+                                                    <TextBlock Text="{Binding StatusText}"
+                                                               Foreground="{Binding Status, Converter={StaticResource StatusBrush}}"
+                                                               FontSize="11.5"
+                                                               FontWeight="SemiBold"
+                                                               VerticalAlignment="Center" />
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- Version Indicator -->
+                                            <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                                    Background="{DynamicResource SurfaceSubtleBrush}"
+                                                    BorderBrush="{DynamicResource BorderSubtleBrush}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="4"
+                                                    Padding="10,6"
+                                                    Margin="0,12,0,0">
+                                                <TextBlock Text="{Binding VersionText}"
+                                                           FontFamily="Cascadia Code, Consolas, Courier New, monospace"
+                                                           FontSize="12"
+                                                           Foreground="{DynamicResource PrimaryTextBrush}"
+                                                           TextTrimming="CharacterEllipsis" />
+                                            </Border>
+
+                                            <!-- Card Actions & Last Checked -->
+                                            <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,12,0,0">
+                                                <TextBlock Text="{Binding LastCheckedText, StringFormat=마지막 확인: {0}}"
+                                                           Foreground="{DynamicResource MutedTextBrush}"
+                                                           FontSize="11.5"
+                                                           VerticalAlignment="Center" />
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                                    <Button Style="{StaticResource IconButton}"
+                                                            Content="&#xE72C;"
+                                                            Command="{Binding DataContext.RefreshRepositoryCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip="저장소 새로 고침"
+                                                            Width="30" Height="30"
+                                                            Margin="0,0,4,0"
+                                                            AutomationProperties.Name="저장소 새로 고침" />
+                                                    <Button Style="{StaticResource IconButton}"
+                                                            Content="&#xE74D;"
+                                                            Command="{Binding DataContext.DeleteRepositoryCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip="저장소 삭제"
+                                                            Width="30" Height="30"
+                                                            Margin="0,0,4,0"
+                                                            AutomationProperties.Name="저장소 삭제" />
+                                                    <Button Content="Release 보기"
+                                                            MinHeight="30"
+                                                            Padding="10,4"
+                                                            FontSize="12"
+                                                            Margin="4,0,0,0"
+                                                            Command="{Binding DataContext.OpenReleaseCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </StackPanel>
-                </ScrollViewer>
-                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Content="취소" Command="{Binding ToggleSettingsCommand}" Margin="0,0,8,0" /><Button Content="저장" Style="{StaticResource AccentButton}" Command="{Binding SaveSettingsCommand}" MinWidth="80" />
-                </StackPanel>
-            </Grid>
-        </Border>
-    </Grid>
+                </Grid>
+            </ScrollViewer>
+
+            <!-- Bottom Status Footer Bar -->
+            <Border Grid.Row="2"
+                    Background="{DynamicResource TitleBarBrush}"
+                    BorderBrush="{DynamicResource DividerBrush}"
+                    BorderThickness="0,1,0,0"
+                    Padding="20,10">
+                <Grid>
+                    <TextBlock Text="{Binding LastFullCheckText}"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
+                               FontSize="12"
+                               VerticalAlignment="Center" />
+                    <Button HorizontalAlignment="Right"
+                            Content="{Binding CheckButtonText}"
+                            Command="{Binding CheckAllCommand}"
+                            MinWidth="88"
+                            MinHeight="30"
+                            FontSize="12.5" />
+                </Grid>
+            </Border>
+
+            <!-- Settings Slide-Over Drawer -->
+            <Border Grid.Row="0" Grid.RowSpan="3"
+                    Background="{DynamicResource OverlayBrush}"
+                    Visibility="{Binding IsSettingsOpen, Converter={StaticResource BoolToVisibility}}"
+                    MouseLeftButtonDown="OnOverlayClick" />
+
+            <Border Grid.Row="0" Grid.RowSpan="3"
+                    Width="380"
+                    HorizontalAlignment="Right"
+                    Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="1,0,0,0"
+                    Padding="22,18"
+                    Visibility="{Binding IsSettingsOpen, Converter={StaticResource BoolToVisibility}}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Drawer Header -->
+                    <Grid Grid.Row="0" Margin="0,0,0,16">
+                        <TextBlock Text="설정"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   VerticalAlignment="Center" />
+                        <Button HorizontalAlignment="Right"
+                                Style="{StaticResource IconButton}"
+                                Content="&#xE711;"
+                                Command="{Binding ToggleSettingsCommand}"
+                                ToolTip="닫기" />
+                    </Grid>
+
+                    <!-- Drawer Content -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,16">
+                        <StackPanel>
+                            <!-- Theme Selection -->
+                            <TextBlock Text="테마"
+                                       FontWeight="SemiBold"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource AccentTextBrush}"
+                                       Margin="0,0,0,8" />
+                            <ListBox ItemsSource="{Binding ThemeModes}"
+                                     SelectedItem="{Binding ThemeMode}"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     Padding="0"
+                                     Margin="0,0,0,18">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="Margin" Value="0,0,6,6" />
+                                        <Setter Property="Padding" Value="0" />
+                                        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ListBoxItem">
+                                                    <Border x:Name="Choice"
+                                                            Background="{DynamicResource ControlBrush}"
+                                                            BorderBrush="{DynamicResource BorderBrush}"
+                                                            BorderThickness="1"
+                                                            CornerRadius="6"
+                                                            Padding="12,6">
+                                                        <ContentPresenter HorizontalAlignment="Center" />
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="Choice" Property="Background" Value="{DynamicResource ControlHoverBrush}" />
+                                                        </Trigger>
+                                                        <Trigger Property="IsSelected" Value="True">
+                                                            <Setter TargetName="Choice" Property="Background" Value="{DynamicResource AccentBrush}" />
+                                                            <Setter Property="Foreground" Value="#FFFFFF" />
+                                                            <Setter TargetName="Choice" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Converter={StaticResource ThemeLabel}}"
+                                                   Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"
+                                                   FontSize="12" />
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <!-- General Settings -->
+                            <TextBlock Text="일반"
+                                       FontWeight="SemiBold"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource AccentTextBrush}"
+                                       Margin="0,0,0,8" />
+                            <CheckBox Content="Windows 시작 시 자동 실행" IsChecked="{Binding RunAtStartup}" Margin="0,0,0,4" />
+                            <CheckBox Content="창을 닫을 때 트레이로 최소화" IsChecked="{Binding MinimizeToTrayOnClose}" Margin="0,0,0,16" />
+
+                            <!-- Check Intervals -->
+                            <TextBlock Text="업데이트 확인 간격"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       Margin="0,0,0,6" />
+                            <ListBox ItemsSource="{Binding CheckIntervals}"
+                                     SelectedItem="{Binding CheckIntervalMinutes}"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     Padding="0"
+                                     Margin="0,0,0,18">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="Margin" Value="0,0,6,6" />
+                                        <Setter Property="Padding" Value="0" />
+                                        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ListBoxItem">
+                                                    <Border x:Name="Choice"
+                                                            Background="{DynamicResource ControlBrush}"
+                                                            BorderBrush="{DynamicResource BorderBrush}"
+                                                            BorderThickness="1"
+                                                            CornerRadius="6"
+                                                            Padding="11,6">
+                                                        <ContentPresenter HorizontalAlignment="Center" />
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="Choice" Property="Background" Value="{DynamicResource ControlHoverBrush}" />
+                                                        </Trigger>
+                                                        <Trigger Property="IsSelected" Value="True">
+                                                            <Setter TargetName="Choice" Property="Background" Value="{DynamicResource AccentBrush}" />
+                                                            <Setter Property="Foreground" Value="#FFFFFF" />
+                                                            <Setter TargetName="Choice" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Converter={StaticResource IntervalLabel}}"
+                                                   Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"
+                                                   FontSize="12" />
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <!-- Notifications -->
+                            <TextBlock Text="알림"
+                                       FontWeight="SemiBold"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource AccentTextBrush}"
+                                       Margin="0,0,0,8" />
+                            <Button Content="테스트 알림 보내기"
+                                    Command="{Binding TestNotificationCommand}"
+                                    HorizontalAlignment="Left"
+                                    MinHeight="30"
+                                    Padding="12,4"
+                                    FontSize="12" />
+                            <TextBlock Text="알림이 보이지 않으면 Windows 설정의 시스템 > 알림에서 허용 상태를 확인해 주세요."
+                                       FontSize="11.5"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       Margin="0,6,0,18" />
+
+                            <Separator Margin="0,4,0,18" Background="{DynamicResource DividerBrush}" />
+
+                            <!-- GitHub PAT -->
+                            <TextBlock Text="GitHub"
+                                       FontWeight="SemiBold"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource AccentTextBrush}"
+                                       Margin="0,0,0,8" />
+                            <CheckBox Content="Pre-release 포함" IsChecked="{Binding IncludePrereleases}" Margin="0,0,0,10" />
+                            <TextBlock Text="Personal Access Token (선택)"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       Margin="0,0,0,6" />
+                            <PasswordBox x:Name="TokenBox"
+                                         MinHeight="36"
+                                         Padding="10,6"
+                                         PasswordChanged="OnTokenChanged"
+                                         ToolTip="Windows 자격 증명 관리자에 안전하게 저장됩니다" />
+                            <TextBlock Text="공개 저장소는 Token 없이 사용할 수 있습니다. Token은 Windows 자격 증명 관리자에 안전하게 암호화되어 저장됩니다."
+                                       FontSize="11.5"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       Margin="0,6,0,0" />
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Drawer Footer Buttons -->
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="취소"
+                                Command="{Binding ToggleSettingsCommand}"
+                                MinWidth="68"
+                                Margin="0,0,8,0" />
+                        <Button Content="저장"
+                                Style="{StaticResource AccentButton}"
+                                Command="{Binding SaveSettingsCommand}"
+                                MinWidth="76" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
 </Window>
+

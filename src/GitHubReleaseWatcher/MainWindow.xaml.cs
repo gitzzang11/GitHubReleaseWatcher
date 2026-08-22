@@ -78,6 +78,31 @@ public partial class MainWindow : Window
         }
     }
 
+    private void OnMinimizeClick(object sender, RoutedEventArgs e) =>
+        WindowState = WindowState.Minimized;
+
+    private void OnMaximizeRestoreClick(object sender, RoutedEventArgs e) =>
+        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+
+    private void OnCloseClick(object sender, RoutedEventArgs e) =>
+        Close();
+
+    private void OnWindowStateChanged(object? sender, EventArgs e)
+    {
+        if (WindowState == WindowState.Maximized)
+        {
+            MaximizeButton.Content = "\uE923";
+            MaximizeButton.ToolTip = "이전 크기로 복원";
+            RootContainer.Margin = new Thickness(7);
+        }
+        else
+        {
+            MaximizeButton.Content = "\uE922";
+            MaximizeButton.ToolTip = "최대화";
+            RootContainer.Margin = new Thickness(0);
+        }
+    }
+
     private void OnOverlayClick(object sender, MouseButtonEventArgs e)
     {
         if (_viewModel.IsSettingsOpen) _viewModel.IsSettingsOpen = false;
