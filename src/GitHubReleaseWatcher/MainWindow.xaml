@@ -244,25 +244,13 @@
 
                                             <!-- Status Tag Badge -->
                                             <Border Grid.Row="0" Grid.Column="1"
-                                                    Background="{Binding Status, Converter={StaticResource StatusBackgroundBrush}}"
-                                                    BorderBrush="{Binding Status, Converter={StaticResource StatusBorderBrush}}"
-                                                    BorderThickness="1"
-                                                    CornerRadius="4"
-                                                    Padding="8,3"
-                                                    Margin="12,0,0,0"
-                                                    VerticalAlignment="Center">
+                                                    Style="{StaticResource StatusBadgeBorderStyle}"
+                                                    Margin="12,0,0,0">
                                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                     <TextBlock Text="{Binding StatusGlyph}"
-                                                               Foreground="{Binding Status, Converter={StaticResource StatusBrush}}"
-                                                               FontWeight="Bold"
-                                                               FontSize="11"
-                                                               Margin="0,0,5,0"
-                                                               VerticalAlignment="Center" />
+                                                               Style="{StaticResource StatusBadgeGlyphStyle}" />
                                                     <TextBlock Text="{Binding StatusText}"
-                                                               Foreground="{Binding Status, Converter={StaticResource StatusBrush}}"
-                                                               FontSize="11.5"
-                                                               FontWeight="SemiBold"
-                                                               VerticalAlignment="Center" />
+                                                               Style="{StaticResource StatusBadgeTextStyle}" />
                                                 </StackPanel>
                                             </Border>
 
@@ -400,6 +388,7 @@
                                     <Style TargetType="ListBoxItem">
                                         <Setter Property="Margin" Value="0,0,6,6" />
                                         <Setter Property="Padding" Value="0" />
+                                        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
                                         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
                                         <Setter Property="Template">
                                             <Setter.Value>
@@ -465,6 +454,7 @@
                                     <Style TargetType="ListBoxItem">
                                         <Setter Property="Margin" Value="0,0,6,6" />
                                         <Setter Property="Padding" Value="0" />
+                                        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
                                         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
                                         <Setter Property="Template">
                                             <Setter.Value>

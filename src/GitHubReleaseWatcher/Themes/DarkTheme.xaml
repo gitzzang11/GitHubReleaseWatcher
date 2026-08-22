@@ -4,7 +4,7 @@
     <SolidColorBrush x:Key="CanvasBrush" Color="#0D1117" />
     <SolidColorBrush x:Key="TitleBarBrush" Color="#161B22" />
     <SolidColorBrush x:Key="SurfaceBrush" Color="#161B22" />
-    <SolidColorBrush x:Key="SurfaceSubtleBrush" Color="#0D1117" />
+    <SolidColorBrush x:Key="SurfaceSubtleBrush" Color="#21262D" />
     <SolidColorBrush x:Key="RaisedBrush" Color="#21262D" />
     <SolidColorBrush x:Key="OverlayBrush" Color="#66000000" />
 
@@ -15,8 +15,8 @@
 
     <!-- Typography -->
     <SolidColorBrush x:Key="PrimaryTextBrush" Color="#F0F6FC" />
-    <SolidColorBrush x:Key="SecondaryTextBrush" Color="#9198A1" />
-    <SolidColorBrush x:Key="MutedTextBrush" Color="#656C76" />
+    <SolidColorBrush x:Key="SecondaryTextBrush" Color="#8B949E" />
+    <SolidColorBrush x:Key="MutedTextBrush" Color="#6E7681" />
     <SolidColorBrush x:Key="InverseTextBrush" Color="#0D1117" />
 
     <!-- Controls & Inputs -->
@@ -46,7 +46,7 @@
     <SolidColorBrush x:Key="ScrollBarThumbPressedBrush" Color="#8B949E" />
     <SolidColorBrush x:Key="ScrollBarTrackBrush" Color="Transparent" />
 
-    <!-- Status Tags / Badges -->
+    <!-- Status Tags / Badges (Dark: 차분하고 짙은 배경 + 선명하고 밝은 텍스트) -->
     <SolidColorBrush x:Key="StatusLatestBgBrush" Color="#122A1E" />
     <SolidColorBrush x:Key="StatusLatestFgBrush" Color="#3FB950" />
     <SolidColorBrush x:Key="StatusLatestBorderBrush" Color="#238636" />
@@ -63,7 +63,7 @@
     <SolidColorBrush x:Key="StatusFailedFgBrush" Color="#F85149" />
     <SolidColorBrush x:Key="StatusFailedBorderBrush" Color="#DA3633" />
 
-    <SolidColorBrush x:Key="StatusNoReleasesBgBrush" Color="#161B22" />
+    <SolidColorBrush x:Key="StatusNoReleasesBgBrush" Color="#21262D" />
     <SolidColorBrush x:Key="StatusNoReleasesFgBrush" Color="#8B949E" />
     <SolidColorBrush x:Key="StatusNoReleasesBorderBrush" Color="#30363D" />
 

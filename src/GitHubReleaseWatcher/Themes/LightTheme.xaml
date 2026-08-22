@@ -10,7 +10,7 @@
 
     <!-- Borders & Dividers -->
     <SolidColorBrush x:Key="BorderBrush" Color="#D0D7DE" />
-    <SolidColorBrush x:Key="BorderSubtleBrush" Color="#E5E7EB" />
+    <SolidColorBrush x:Key="BorderSubtleBrush" Color="#E1E4E8" />
     <SolidColorBrush x:Key="DividerBrush" Color="#E1E4E8" />
 
     <!-- Typography -->
@@ -46,25 +46,25 @@
     <SolidColorBrush x:Key="ScrollBarThumbPressedBrush" Color="#818996" />
     <SolidColorBrush x:Key="ScrollBarTrackBrush" Color="Transparent" />
 
-    <!-- Status Tags / Badges -->
+    <!-- Status Tags / Badges (Light: 밝고 산뜻한 배경 + 진하고 선명한 텍스트) -->
     <SolidColorBrush x:Key="StatusLatestBgBrush" Color="#DAFBE1" />
     <SolidColorBrush x:Key="StatusLatestFgBrush" Color="#1A7F37" />
-    <SolidColorBrush x:Key="StatusLatestBorderBrush" Color="#B4E9C1" />
+    <SolidColorBrush x:Key="StatusLatestBorderBrush" Color="#4AC26B" />
 
     <SolidColorBrush x:Key="StatusUpdateBgBrush" Color="#DDF4FF" />
     <SolidColorBrush x:Key="StatusUpdateFgBrush" Color="#0969DA" />
-    <SolidColorBrush x:Key="StatusUpdateBorderBrush" Color="#B6E3FF" />
+    <SolidColorBrush x:Key="StatusUpdateBorderBrush" Color="#54AEFF" />
 
     <SolidColorBrush x:Key="StatusCheckingBgBrush" Color="#FFF8C5" />
     <SolidColorBrush x:Key="StatusCheckingFgBrush" Color="#9A6700" />
-    <SolidColorBrush x:Key="StatusCheckingBorderBrush" Color="#F9E68B" />
+    <SolidColorBrush x:Key="StatusCheckingBorderBrush" Color="#D4A72C" />
 
     <SolidColorBrush x:Key="StatusFailedBgBrush" Color="#FFEBE9" />
     <SolidColorBrush x:Key="StatusFailedFgBrush" Color="#CF222E" />
-    <SolidColorBrush x:Key="StatusFailedBorderBrush" Color="#FFC1BA" />
+    <SolidColorBrush x:Key="StatusFailedBorderBrush" Color="#FF8182" />
 
-    <SolidColorBrush x:Key="StatusNoReleasesBgBrush" Color="#F6F8FA" />
-    <SolidColorBrush x:Key="StatusNoReleasesFgBrush" Color="#656D76" />
+    <SolidColorBrush x:Key="StatusNoReleasesBgBrush" Color="#EFF1F3" />
+    <SolidColorBrush x:Key="StatusNoReleasesFgBrush" Color="#57606A" />
     <SolidColorBrush x:Key="StatusNoReleasesBorderBrush" Color="#D0D7DE" />
 
     <!-- General Status -->
