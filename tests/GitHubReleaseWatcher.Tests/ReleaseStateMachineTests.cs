@@ -28,17 +28,51 @@ public sealed class ReleaseStateMachineTests
     }
 
     [TestMethod]
-    public void NewReleaseNotifiesOnceAndShowsTransition()
+    public void NewReleaseRemainsPendingUntilDeliveryIsConfirmed()
     {
         var repository = CreateRepository();
         Apply(repository, "v1.0.0");
         var first = Apply(repository, "v1.1.0");
-        var duplicate = Apply(repository, "v1.1.0");
+        var beforeDelivery = Apply(repository, "v1.1.0");
         Assert.IsTrue(first.ShouldNotify);
         Assert.AreEqual("v1.0.0", first.PreviousVersion);
         Assert.AreEqual("v1.1.0", repository.LatestVersion);
         Assert.IsTrue(repository.HasUpdate);
-        Assert.IsFalse(duplicate.ShouldNotify);
+        Assert.IsTrue(beforeDelivery.ShouldNotify);
+
+        ReleaseStateMachine.MarkNotified(repository, "v1.1.0");
+        var afterDelivery = Apply(repository, "v1.1.0");
+        Assert.IsFalse(afterDelivery.ShouldNotify);
+    }
+
+    [TestMethod]
+    public void NotModifiedRetriesAnUndeliveredNotification()
+    {
+        var repository = CreateRepository();
+        Apply(repository, "v1.0.0");
+        Apply(repository, "v1.1.0");
+
+        var transition = ReleaseStateMachine.Apply(repository,
+            new GitHubReleaseResult(GitHubResultKind.NotModified), DateTimeOffset.UtcNow);
+
+        Assert.IsTrue(transition.ShouldNotify);
+        Assert.AreEqual("v1.0.0", transition.PreviousVersion);
+        Assert.AreEqual("v1.1.0", transition.LatestVersion);
+    }
+
+    [TestMethod]
+    public void AcknowledgingAReleasePreventsALaterNotification()
+    {
+        var repository = CreateRepository();
+        Apply(repository, "v1.0.0");
+        Apply(repository, "v1.1.0");
+
+        ReleaseStateMachine.Acknowledge(repository);
+        var transition = Apply(repository, "v1.1.0");
+
+        Assert.IsFalse(transition.ShouldNotify);
+        Assert.AreEqual("v1.1.0", repository.LastKnownVersion);
+        Assert.AreEqual("v1.1.0", repository.LastNotifiedVersion);
     }
 
     [TestMethod]

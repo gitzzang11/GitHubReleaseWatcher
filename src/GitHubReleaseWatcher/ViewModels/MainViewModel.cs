@@ -38,6 +38,7 @@ public sealed class MainViewModel : ObservableObject
         _startupService = startupService;
         _notificationService = notificationService;
         _logger = logger;
+        _notificationService.NotificationDelivered += OnNotificationDelivered;
 
         AddRepositoryCommand = new AsyncRelayCommand(AddRepositoryAsync, () => !IsChecking && !string.IsNullOrWhiteSpace(RepositoryUrl));
         CheckAllCommand = new AsyncRelayCommand(() => CheckAllAsync(false), () => !IsChecking && Repositories.Count > 0);
@@ -45,6 +46,7 @@ public sealed class MainViewModel : ObservableObject
         OpenReleaseCommand = new AsyncRelayCommand<RepositoryItemViewModel>(OpenReleaseAsync, item => item.Model.LatestReleaseUrl is not null);
         DeleteRepositoryCommand = new RelayCommand<RepositoryItemViewModel>(item => DeleteRequested?.Invoke(item));
         ToggleSettingsCommand = new RelayCommand(() => IsSettingsOpen = !IsSettingsOpen);
+        TestNotificationCommand = new RelayCommand(SendTestNotification);
         SaveSettingsCommand = new AsyncRelayCommand(SaveSettingsAsync);
     }
 
@@ -115,6 +117,7 @@ public sealed class MainViewModel : ObservableObject
     public AsyncRelayCommand<RepositoryItemViewModel> OpenReleaseCommand { get; }
     public RelayCommand<RepositoryItemViewModel> DeleteRepositoryCommand { get; }
     public RelayCommand ToggleSettingsCommand { get; }
+    public RelayCommand TestNotificationCommand { get; }
     public AsyncRelayCommand SaveSettingsCommand { get; }
 
     public event Action<RepositoryItemViewModel>? DeleteRequested;
@@ -128,6 +131,9 @@ public sealed class MainViewModel : ObservableObject
         {
             Repositories.Add(new RepositoryItemViewModel(repository));
         }
+
+        try { _startupService.SetEnabled(_settings.RunAtStartup); }
+        catch (Exception ex) { await _logger.ErrorAsync("Windows 시작 프로그램 동기화 실패", ex); }
 
         try { GitHubToken = _tokenStore.Read(); }
         catch (Exception ex) { await _logger.ErrorAsync("GitHub Token 로드 실패", ex); }
@@ -150,6 +156,7 @@ public sealed class MainViewModel : ObservableObject
             _lastFullCheckAt = DateTimeOffset.Now;
             OnPropertyChanged(nameof(LastFullCheckText));
             await _storage.SaveRepositoriesAsync(Repositories.Select(r => r.Model));
+            await _logger.InfoAsync($"전체 Release 확인 완료: {Repositories.Count}개 저장소");
         }
         catch (Exception ex)
         {
@@ -253,6 +260,43 @@ public sealed class MainViewModel : ObservableObject
         if (transition.ShouldNotify)
         {
             _notificationService.Show(repository.Model, transition.PreviousVersion);
+        }
+    }
+
+    private void SendTestNotification()
+    {
+        var result = _notificationService.ShowTest();
+        BannerMessage = result switch
+        {
+            NotificationSendResult.Delivered => "Windows에 테스트 알림을 보냈습니다",
+            NotificationSendResult.Disabled => "Windows 설정에서 이 앱의 알림이 꺼져 있습니다",
+            NotificationSendResult.NotRegistered => "Windows 알림을 등록하지 못했습니다. 로그를 확인해 주세요",
+            _ => "테스트 알림을 보내지 못했습니다"
+        };
+    }
+
+    private void OnNotificationDelivered(Guid repositoryId, string version)
+    {
+        var repository = Repositories.FirstOrDefault(item => item.Model.Id == repositoryId);
+        if (repository is null)
+        {
+            return;
+        }
+
+        ReleaseStateMachine.MarkNotified(repository.Model, version);
+        repository.Refresh();
+        _ = SaveNotificationDeliveryAsync();
+    }
+
+    private async Task SaveNotificationDeliveryAsync()
+    {
+        try
+        {
+            await _storage.SaveRepositoriesAsync(Repositories.Select(r => r.Model));
+        }
+        catch (Exception ex)
+        {
+            await _logger.ErrorAsync("알림 전달 상태 저장 실패", ex);
         }
     }
 

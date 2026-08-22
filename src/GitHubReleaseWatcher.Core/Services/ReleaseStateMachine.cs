@@ -18,7 +18,7 @@ public static class ReleaseStateMachine
                     ? RepositoryStatus.UpdateAvailable
                     : repository.LatestVersion is null ? RepositoryStatus.NoReleases : RepositoryStatus.Current;
                 repository.StatusMessage = null;
-                return ReleaseTransition.None;
+                return CreatePendingNotificationTransition(repository);
 
             case GitHubResultKind.NoReleases:
                 repository.Status = RepositoryStatus.NoReleases;
@@ -54,16 +54,35 @@ public static class ReleaseStateMachine
         }
 
         var changed = !string.Equals(previousVersion, release.TagName, StringComparison.OrdinalIgnoreCase);
-        var shouldNotify = changed
-            && !string.Equals(repository.LastNotifiedVersion, release.TagName, StringComparison.OrdinalIgnoreCase);
-
-        if (shouldNotify)
-        {
-            repository.LastNotifiedVersion = release.TagName;
-        }
+        var shouldNotify = !string.Equals(repository.LastNotifiedVersion, release.TagName, StringComparison.OrdinalIgnoreCase);
 
         repository.Status = repository.HasUpdate ? RepositoryStatus.UpdateAvailable : RepositoryStatus.Current;
         return new ReleaseTransition(shouldNotify, changed, previousVersion, release.TagName, release.HtmlUrl);
+    }
+
+    private static ReleaseTransition CreatePendingNotificationTransition(RepositorySubscription repository)
+    {
+        if (repository.LatestVersion is null
+            || repository.LatestReleaseUrl is null
+            || string.Equals(repository.LastNotifiedVersion, repository.LatestVersion, StringComparison.OrdinalIgnoreCase))
+        {
+            return ReleaseTransition.None;
+        }
+
+        return new ReleaseTransition(
+            true,
+            false,
+            repository.LastKnownVersion,
+            repository.LatestVersion,
+            repository.LatestReleaseUrl);
+    }
+
+    public static void MarkNotified(RepositorySubscription repository, string version)
+    {
+        if (string.Equals(repository.LatestVersion, version, StringComparison.OrdinalIgnoreCase))
+        {
+            repository.LastNotifiedVersion = version;
+        }
     }
 
     public static void Acknowledge(RepositorySubscription repository)
@@ -74,6 +93,7 @@ public static class ReleaseStateMachine
         }
 
         repository.LastKnownVersion = repository.LatestVersion;
+        repository.LastNotifiedVersion = repository.LatestVersion;
         repository.Status = RepositoryStatus.Current;
     }
 }

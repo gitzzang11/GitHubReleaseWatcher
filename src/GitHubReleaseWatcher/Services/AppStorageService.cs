@@ -8,6 +8,7 @@ public sealed class AppStorageService
     private readonly AtomicJsonStore<AppSettings> _settings;
     private readonly AtomicJsonStore<List<RepositorySubscription>> _repositories;
     private readonly FileLogger _logger;
+    private readonly SemaphoreSlim _repositorySaveGate = new(1, 1);
 
     public AppStorageService(AppPaths paths, FileLogger logger)
     {
@@ -45,6 +46,17 @@ public sealed class AppStorageService
     }
 
     public Task SaveSettingsAsync(AppSettings settings) => _settings.SaveAsync(settings);
-    public Task SaveRepositoriesAsync(IEnumerable<RepositorySubscription> repositories) =>
-        _repositories.SaveAsync(repositories.ToList());
+    public async Task SaveRepositoriesAsync(IEnumerable<RepositorySubscription> repositories)
+    {
+        var snapshot = repositories.ToList();
+        await _repositorySaveGate.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            await _repositories.SaveAsync(snapshot).ConfigureAwait(false);
+        }
+        finally
+        {
+            _repositorySaveGate.Release();
+        }
+    }
 }

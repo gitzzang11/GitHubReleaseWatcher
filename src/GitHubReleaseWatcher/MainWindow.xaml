@@ -131,6 +131,9 @@
                             </ListBox.ItemContainerStyle>
                             <ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Converter={StaticResource IntervalLabel}}" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" FontSize="12" /></DataTemplate></ListBox.ItemTemplate>
                         </ListBox>
+                        <TextBlock Text="알림" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Margin="0,18,0,10" />
+                        <Button Content="테스트 알림 보내기" Command="{Binding TestNotificationCommand}" HorizontalAlignment="Left" />
+                        <TextBlock Text="알림이 보이지 않으면 Windows 설정의 시스템 > 알림에서 허용 상태를 확인해 주세요." FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" Margin="0,8,0,0" />
                         <Separator Margin="0,24" Background="{DynamicResource DividerBrush}" />
                         <TextBlock Text="GitHub" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,10" />
                         <CheckBox Content="Pre-release 포함" IsChecked="{Binding IncludePrereleases}" />

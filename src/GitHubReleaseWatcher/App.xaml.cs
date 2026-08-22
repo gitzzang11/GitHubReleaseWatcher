@@ -18,10 +18,22 @@ public partial class App : System.Windows.Application
     private HttpClient? _httpClient;
     private MainWindow? _mainWindow;
     private MainViewModel? _mainViewModel;
+    private Mutex? _singleInstanceMutex;
+    private bool _ownsSingleInstanceMutex;
     private bool _exiting;
 
     private async void OnStartup(object sender, StartupEventArgs e)
     {
+        _singleInstanceMutex = new Mutex(
+            true,
+            @"Local\GitHubReleaseWatcher.A0D24D99-36D5-4D1A-82BE-018F67B92C3D",
+            out _ownsSingleInstanceMutex);
+        if (!_ownsSingleInstanceMutex)
+        {
+            Shutdown();
+            return;
+        }
+
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
         TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
@@ -32,7 +44,8 @@ public partial class App : System.Windows.Application
 
         _themeService = new ThemeService();
         _desktopSessionService = new DesktopSessionService(Dispatcher, _logger);
-        _notificationService = new NotificationService(_logger, _desktopSessionService);
+        _trayService = new TrayService();
+        _notificationService = new NotificationService(_logger, _desktopSessionService, _trayService);
         _notificationService.Register();
         _notificationService.ReleaseRequested += url => Dispatcher.Invoke(() => BrowserService.Open(url));
         _httpClient = new HttpClient();
@@ -49,7 +62,6 @@ public partial class App : System.Windows.Application
 
         _mainWindow = new MainWindow(_mainViewModel);
         MainWindow = _mainWindow;
-        _trayService = new TrayService();
         _trayService.OpenRequested += () => Dispatcher.Invoke(_mainWindow.ShowAndActivate);
         _trayService.CheckRequested += () => Dispatcher.Invoke(() => _mainViewModel.CheckAllCommand.Execute(null));
         _trayService.ExitRequested += () => Dispatcher.Invoke(ExitApplication);
@@ -66,6 +78,12 @@ public partial class App : System.Windows.Application
 
         // 주기 타이머를 기다리지 않고 앱이 시작된 직후 한 번 확인한다.
         await _mainViewModel.CheckAllAsync(true);
+
+        if (e.Args.Contains("--test-notification", StringComparer.OrdinalIgnoreCase))
+        {
+            var result = _notificationService.ShowTest();
+            await _logger.InfoAsync($"명령줄 테스트 알림 결과: {result}");
+        }
     }
 
     private void StartMonitor()
@@ -91,6 +109,11 @@ public partial class App : System.Windows.Application
         _themeService?.Dispose();
         _httpClient?.Dispose();
         if (_logger is not null) await _logger.InfoAsync("앱 종료");
+        if (_ownsSingleInstanceMutex)
+        {
+            _singleInstanceMutex?.ReleaseMutex();
+        }
+        _singleInstanceMutex?.Dispose();
     }
 
     private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)

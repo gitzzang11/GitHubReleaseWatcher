@@ -23,14 +23,19 @@ public sealed class TrayService : IDisposable
             Visible = true
         };
         _notifyIcon.DoubleClick += (_, _) => OpenRequested?.Invoke();
+        _notifyIcon.BalloonTipClicked += (_, _) => BalloonClicked?.Invoke();
     }
 
     public event Action? OpenRequested;
     public event Action? CheckRequested;
     public event Action? ExitRequested;
+    public event Action? BalloonClicked;
 
     public void ShowBalloon(string text) => _notifyIcon.ShowBalloonTip(
         2500, "GitHub Release Watcher", text, Forms.ToolTipIcon.Info);
+
+    public void ShowBalloon(string title, string text) => _notifyIcon.ShowBalloonTip(
+        10000, title, text, Forms.ToolTipIcon.Info);
 
     private static Icon CreateIcon()
     {
