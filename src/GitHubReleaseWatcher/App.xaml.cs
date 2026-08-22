@@ -19,17 +19,29 @@ public partial class App : System.Windows.Application
     private MainWindow? _mainWindow;
     private MainViewModel? _mainViewModel;
     private Mutex? _singleInstanceMutex;
+    private EventWaitHandle? _showWindowEvent;
+    private RegisteredWaitHandle? _showWindowRegistration;
     private bool _ownsSingleInstanceMutex;
     private bool _exiting;
 
     private async void OnStartup(object sender, StartupEventArgs e)
     {
+        _showWindowEvent = new EventWaitHandle(
+            false,
+            EventResetMode.AutoReset,
+            @"Local\GitHubReleaseWatcher.ShowWindow.A0D24D99-36D5-4D1A-82BE-018F67B92C3D");
         _singleInstanceMutex = new Mutex(
             true,
             @"Local\GitHubReleaseWatcher.A0D24D99-36D5-4D1A-82BE-018F67B92C3D",
             out _ownsSingleInstanceMutex);
         if (!_ownsSingleInstanceMutex)
         {
+            // 시작 프로그램의 백그라운드 실행은 기존 인스턴스를 방해하지 않는다.
+            // 사용자가 바로가기 등으로 직접 실행한 경우에는 기존 창을 앞으로 가져온다.
+            if (!e.Args.Contains("--background", StringComparer.OrdinalIgnoreCase))
+            {
+                _showWindowEvent.Set();
+            }
             Shutdown();
             return;
         }
@@ -62,6 +74,12 @@ public partial class App : System.Windows.Application
 
         _mainWindow = new MainWindow(_mainViewModel);
         MainWindow = _mainWindow;
+        _showWindowRegistration = ThreadPool.RegisterWaitForSingleObject(
+            _showWindowEvent,
+            (_, _) => Dispatcher.BeginInvoke(_mainWindow.ShowAndActivate),
+            null,
+            Timeout.Infinite,
+            false);
         _trayService.OpenRequested += () => Dispatcher.Invoke(_mainWindow.ShowAndActivate);
         _trayService.CheckRequested += () => Dispatcher.Invoke(() => _mainViewModel.CheckAllCommand.Execute(null));
         _trayService.ExitRequested += () => Dispatcher.Invoke(ExitApplication);
@@ -102,6 +120,7 @@ public partial class App : System.Windows.Application
 
     private async void OnExit(object sender, ExitEventArgs e)
     {
+        _showWindowRegistration?.Unregister(null);
         _monitorService?.Dispose();
         _trayService?.Dispose();
         _notificationService?.Dispose();
@@ -114,6 +133,7 @@ public partial class App : System.Windows.Application
             _singleInstanceMutex?.ReleaseMutex();
         }
         _singleInstanceMutex?.Dispose();
+        _showWindowEvent?.Dispose();
     }
 
     private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
